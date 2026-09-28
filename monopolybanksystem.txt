@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Monopoly Bank</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif
+}
+
+body{
+    background:#efe7d2;
+    color:#222;
+    min-height:100vh
+}
+
+header{
+    background:#d62828;
+    color:white;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 4px 15px rgba(0,0,0,.2)
+}
+
+header h1{
+    font-size:32px
+}
+
+header p{
+    margin-top:4px;
+    opacity:.9
+}
+
+.container{
+    width:min(1200px,95%);
+    margin:22px auto
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:15px
+}
+
+.card{
+    background:white;
+    padding:18px;
+    border-radius:17px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08)
+}
+
+.card h2{
+    margin-bottom:14px
+}
+
+input,select{
+    width:100%;
+    border:1px solid #ccc;
+    border-radius:10px;
+    padding:12px;
+    font-size:16px;
+    margin-bottom:9px;
+    background:white
+}
+
+button{
+    border:none;
+    padding:11px 14px;
+    border-radius:10px;
+    font-weight:bold;
+    font-size:14px;
+    cursor:pointer;
+    transition:.15s
+}
+
+button:hover{
+    opacity:.9;
+    transform:translateY(-1px)
+}
+
+.green{background:#2d7d32;color:white}
+.red{background:#c62828;color:white}
+.blue{background:#1565c0;color:white}
+.orange{background:#ef6c00;color:white}
+.purple{background:#7b1fa2;color:white}
+.dark{background:#222;color:white}
+.gold{background:#e6aa00;color:white}
+
+.players-title{
+    margin:25px 0 14px
+}
+
+#players{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:14px
+}
+
+.player{
+    background:white;
+    border-radius:17px;
+    padding:17px;
+    border-top:8px solid #1565c0;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+    position:relative
+}
+
+.player h3{
+    font-size:22px
+}
+
+.money{
+    color:#28752d;
+    font-size:31px;
+    font-weight:bold;
+    margin:12px 0
+}
+
+.player-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px
+}
+
+.quick{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:5px 0 10px
+}
+
+.quick button{
+    background:#eee;
+    color:#222;
+    padding:8px 10px
+}
+
+.parking{
+    text-align:center;
+    background:#fff8dc
+}
+
+.parkingMoney{
+    font-size:40px;
+    font-weight:bold;
+    color:#ef6c00;
+    margin:13px 0
+}
+
+.bigAction{
+    width:100%;
+    margin-bottom:8px
+}
+
+.startBadge{
+    position:absolute;
+    right:12px;
+    top:12px;
+    padding:5px 8px;
+    background:#e6aa00;
+    color:white;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:bold
+}
+
+.log{
+    max-height:320px;
+    overflow:auto
+}
+
+.logEntry{
+    background:#f6f6f6;
+    padding:9px;
+    border-radius:8px;
+    margin-bottom:6px;
+    font-size:14px
+}
+
+.logPositive{border-left:4px solid #2d7d32}
+.logNegative{border-left:4px solid #c62828}
+.logNeutral{border-left:4px solid #1565c0}
+
+.section{
+    margin-top:22px
+}
+
+.actionGrid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:8px
+}
+
+.stat{
+    text-align:center
+}
+
+.statValue{
+    font-size:30px;
+    font-weight:bold;
+    margin-top:5px
+}
+
+.undo{
+    margin-top:10px;
+    width:100%
+}
+
+@media(max-width:600px){
+
+    header h1{
+        font-size:25px
+    }
+
+    .player-buttons{
+        grid-template-columns:1fr
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏦 MONOPOLY BANK</h1>
+    <p>Digitale Bankzentrale</p>
+</header>
+
+<div class="container">
+
+<div class="grid">
+
+<!-- SPIELER -->
+
+<div class="card">
+
+<h2>👤 Spieler hinzufügen</h2>
+
+<input id="playerName" placeholder="Spielername">
+
+<input id="startMoney" type="number" value="1500">
+
+<button class="green bigAction" onclick="addPlayer()">
+Spieler hinzufügen
+</button>
+
+</div>
+
+
+<!-- FREIPARKEN -->
+
+<div class="card parking">
+
+<h2>🚗 Freiparken</h2>
+
+<div class="parkingMoney">
+<span id="parkingMoney">0</span> M
+</div>
+
+<select id="parkingWinner">
+<option value="">Spieler auswählen</option>
+</select>
+
+<button class="orange bigAction" onclick="collectParking()">
+🎉 Jackpot kassieren
+</button>
+
+</div>
+
+
+<!-- SPIELINFO -->
+
+<div class="card">
+
+<h2>🎲 Spielübersicht</h2>
+
+<div class="stat">
+Spieler
+<div class="statValue" id="playerCount">0</div>
+</div>
+
+<div class="stat">
+Gesamtvermögen
+<div class="statValue" id="totalMoney">0 M</div>
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- SCHNELLAKTIONEN -->
+
+<div class="card section">
+
+<h2>⚡ Schnellaktionen</h2>
+
+<select id="quickPlayer">
+<option value="">Spieler auswählen...</option>
+</select>
+
+<div class="actionGrid">
+
+<button class="green" onclick="quickAction(200,'LOS')">
+🏁 Über LOS +200
+</button>
+
+<button class="green" onclick="quickAction(100,'Bonus')">
+🎁 Bonus +100
+</button>
+
+<button class="green" onclick="quickAction(50,'Bonus')">
+🎁 Bonus +50
+</button>
+
+<button class="red" onclick="quickAction(-50,'Steuer')">
+🏛 Steuer -50
+</button>
+
+<button class="red" onclick="quickAction(-100,'Steuer')">
+🏛 Steuer -100
+</button>
+
+<button class="orange" onclick="quickParking(50)">
+🚗 50 → Freiparken
+</button>
+
+<button class="orange" onclick="quickParking(100)">
+🚗 100 → Freiparken
+</button>
+
+<button class="purple" onclick="birthday()">
+🎂 Geburtstag
+</button>
+
+<button class="blue" onclick="bankPaysEveryone(50)">
+🏦 Alle +50
+</button>
+
+<button class="red" onclick="everyonePaysBank(50)">
+💸 Alle -50
+</button>
+
+</div>
+
+</div>
+
+
+
+<!-- ÜBERWEISUNG -->
+
+<div class="card section">
+
+<h2>💸 Überweisung</h2>
+
+<div class="grid">
+
+<div>
+
+<select id="transferFrom">
+<option value="">Von Spieler...</option>
+</select>
+
+<select id="transferTo">
+<option value="">An Spieler...</option>
+</select>
+
+</div>
+
+<div>
+
+<input type="number" id="transferAmount" placeholder="Betrag">
+
+<div class="quick">
+
+<button onclick="setTransfer(10)">10</button>
+<button onclick="setTransfer(20)">20</button>
+<button onclick="setTransfer(50)">50</button>
+<button onclick="setTransfer(100)">100</button>
+<button onclick="setTransfer(200)">200</button>
+<button onclick="setTransfer(500)">500</button>
+
+</div>
+
+<button class="blue bigAction" onclick="transferMoney()">
+Überweisen
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- MIETE -->
+
+<div class="card section">
+
+<h2>🏠 Miete bezahlen</h2>
+
+<div class="grid">
+
+<div>
+
+<select id="rentFrom">
+<option value="">Mieter...</option>
+</select>
+
+<select id="rentTo">
+<option value="">Besitzer...</option>
+</select>
+
+</div>
+
+<div>
+
+<input type="number" id="rentAmount" placeholder="Miete">
+
+<div class="quick">
+
+<button onclick="setRent(10)">10</button>
+<button onclick="setRent(25)">25</button>
+<button onclick="setRent(50)">50</button>
+<button onclick="setRent(100)">100</button>
+<button onclick="setRent(200)">200</button>
+<button onclick="setRent(500)">500</button>
+
+</div>
+
+<button class="purple bigAction" onclick="payRent()">
+🏠 Miete zahlen
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<h2 class="players-title">🎩 Spieler</h2>
+
+<div id="players"></div>
+
+
+
+<!-- VERLAUF -->
+
+<div class="card section">
+
+<h2>📜 Transaktionen</h2>
+
+<div class="log" id="log"></div>
+
+<button class="dark undo" onclick="undo()">
+↩ Letzte Aktion rückgängig
+</button>
+
+</div>
+
+
+
+<div class="card section">
+
+<h2>⚙️ Spiel</h2>
+
+<div class="actionGrid">
+
+<button class="gold" onclick="randomStartPlayer()">
+🎲 Startspieler auslosen
+</button>
+
+<button class="red" onclick="resetGame()">
+🗑 Neues Spiel
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+let players = [];
+let parking = 0;
+let history = [];
+let logs = [];
+let startPlayer = null;
+
+const colors=[
+"#1565c0",
+"#c62828",
+"#2e7d32",
+"#ef6c00",
+"#7b1fa2",
+"#00838f",
+"#ad1457",
+"#5d4037"
+];
+
+
+
+function addPlayer(){
+
+const name=document.getElementById("playerName").value.trim();
+const money=Number(document.getElementById("startMoney").value);
+
+if(!name){
+alert("Spielername eingeben.");
+return;
+}
+
+if(players.some(p=>p.name.toLowerCase()===name.toLowerCase())){
+alert("Spieler existiert bereits.");
+return;
+}
+
+saveHistory();
+
+players.push({
+id:Date.now()+Math.random(),
+name,
+money,
+color:colors[players.length%colors.length]
+});
+
+document.getElementById("playerName").value="";
+
+addLog(`👤 ${name} startet mit ${money} M.`,"neutral");
+
+saveGame();
+render();
+
+}
+
+
+
+function render(){
+
+const container=document.getElementById("players");
+
+container.innerHTML="";
+
+players.forEach(player=>{
+
+const div=document.createElement("div");
+
+div.className="player";
+div.style.borderTopColor=player.color;
+
+let badge="";
+
+if(player.id===startPlayer){
+badge=`<div class="startBadge">STARTSPIELER</div>`;
+}
+
+div.innerHTML=`
+
+${badge}
+
+<h3>${escapeHTML(player.name)}</h3>
+
+<div class="money">
+${formatMoney(player.money)} M
+</div>
+
+<input
+type="number"
+id="amount-${player.id}"
+placeholder="Betrag">
+
+<div class="quick">
+
+<button onclick="setPlayerAmount(${player.id},10)">10</button>
+<button onclick="setPlayerAmount(${player.id},50)">50</button>
+<button onclick="setPlayerAmount(${player.id},100)">100</button>
+<button onclick="setPlayerAmount(${player.id},200)">200</button>
+<button onclick="setPlayerAmount(${player.id},500)">500</button>
+
+</div>
+
+<div class="player-buttons">
+
+<button class="green" onclick="changeMoney(${player.id},1)">
+🏦 Bank +
+</button>
+
+<button class="red" onclick="changeMoney(${player.id},-1)">
+🏦 Bank -
+</button>
+
+<button class="green" onclick="passGo(${player.id})">
+🏁 LOS +200
+</button>
+
+<button class="orange" onclick="sendToParking(${player.id})">
+🚗 Freiparken
+</button>
+
+<button class="purple" onclick="bail(${player.id})">
+🚔 Kaution -50
+</button>
+
+<button class="dark" onclick="removePlayer(${player.id})">
+✖ Entfernen
+</button>
+
+</div>
+
+`;
+
+container.appendChild(div);
+
+});
+
+document.getElementById("parkingMoney").innerText=formatMoney(parking);
+document.getElementById("playerCount").innerText=players.length;
+
+const total=players.reduce((sum,p)=>sum+p.money,0);
+
+document.getElementById("totalMoney").innerText=
+formatMoney(total)+" M";
+
+renderLog();
+
+updateSelects();
+
+}
+
+
+
+function setPlayerAmount(id,value){
+
+document.getElementById(`amount-${id}`).value=value;
+
+}
+
+
+
+function changeMoney(id,direction){
+
+const player=players.find(p=>p.id===id);
+
+const input=document.getElementById(`amount-${id}`);
+
+const amount=Number(input.value);
+
+if(!amount||amount<=0){
+alert("Betrag eingeben.");
+return;
+}
+
+saveHistory();
+
+player.money+=amount*direction;
+
+if(direction===1){
+
+addLog(
+`🏦 Bank → ${player.name}: +${amount} M`,
+"positive"
+);
+
+}else{
+
+addLog(
+`${player.name} → 🏦 Bank: ${amount} M`,
+"negative"
+);
+
+}
+
+input.value="";
+
+saveGame();
+render();
+
+}
+
+
+
+function passGo(id){
+
+const player=players.find(p=>p.id===id);
+
+saveHistory();
+
+player.money+=200;
+
+addLog(
+`🏁 ${player.name} geht über LOS und erhält 200 M.`,
+"positive"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function quickAction(amount,type){
+
+const id=Number(document.getElementById("quickPlayer").value);
+
+if(!id){
+alert("Spieler auswählen.");
+return;
+}
+
+const player=players.find(p=>p.id===id);
+
+saveHistory();
+
+player.money+=amount;
+
+if(amount>0){
+
+addLog(
+`${type==="LOS"?"🏁":"🎁"} ${player.name}: +${amount} M (${type})`,
+"positive"
+);
+
+}else{
+
+addLog(
+`🏛 ${player.name}: ${amount} M (${type})`,
+"negative"
+);
+
+}
+
+saveGame();
+render();
+
+}
+
+
+
+function transferMoney(){
+
+const from=Number(document.getElementById("transferFrom").value);
+const to=Number(document.getElementById("transferTo").value);
+const amount=Number(document.getElementById("transferAmount").value);
+
+if(!from||!to||!amount||amount<=0){
+
+alert("Spieler und Betrag auswählen.");
+
+return;
+
+}
+
+if(from===to){
+
+alert("Gleicher Spieler.");
+
+return;
+
+}
+
+const sender=players.find(p=>p.id===from);
+const receiver=players.find(p=>p.id===to);
+
+saveHistory();
+
+sender.money-=amount;
+receiver.money+=amount;
+
+addLog(
+`💸 ${sender.name} → ${receiver.name}: ${amount} M`,
+"neutral"
+);
+
+document.getElementById("transferAmount").value="";
+
+saveGame();
+render();
+
+}
+
+
+
+function setTransfer(value){
+
+document.getElementById("transferAmount").value=value;
+
+}
+
+
+
+function payRent(){
+
+const from=Number(document.getElementById("rentFrom").value);
+const to=Number(document.getElementById("rentTo").value);
+const amount=Number(document.getElementById("rentAmount").value);
+
+if(!from||!to||!amount||amount<=0){
+
+alert("Mieter, Besitzer und Miete auswählen.");
+
+return;
+
+}
+
+if(from===to){
+
+alert("Mieter und Besitzer müssen verschieden sein.");
+
+return;
+
+}
+
+const renter=players.find(p=>p.id===from);
+const owner=players.find(p=>p.id===to);
+
+saveHistory();
+
+renter.money-=amount;
+owner.money+=amount;
+
+addLog(
+`🏠 ${renter.name} zahlt ${owner.name} ${amount} M Miete.`,
+"neutral"
+);
+
+document.getElementById("rentAmount").value="";
+
+saveGame();
+render();
+
+}
+
+
+
+function setRent(value){
+
+document.getElementById("rentAmount").value=value;
+
+}
+
+
+
+function sendToParking(id){
+
+const player=players.find(p=>p.id===id);
+const input=document.getElementById(`amount-${id}`);
+
+const amount=Number(input.value);
+
+if(!amount||amount<=0){
+
+alert("Betrag eingeben.");
+
+return;
+
+}
+
+saveHistory();
+
+player.money-=amount;
+parking+=amount;
+
+addLog(
+`🚗 ${player.name} zahlt ${amount} M ins Freiparken.`,
+"negative"
+);
+
+input.value="";
+
+saveGame();
+render();
+
+}
+
+
+
+function quickParking(amount){
+
+const id=Number(document.getElementById("quickPlayer").value);
+
+if(!id){
+
+alert("Spieler auswählen.");
+
+return;
+
+}
+
+const player=players.find(p=>p.id===id);
+
+saveHistory();
+
+player.money-=amount;
+parking+=amount;
+
+addLog(
+`🚗 ${player.name} → Freiparken: ${amount} M`,
+"negative"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function collectParking(){
+
+const id=Number(document.getElementById("parkingWinner").value);
+
+if(!id){
+
+alert("Spieler auswählen.");
+
+return;
+
+}
+
+if(parking<=0){
+
+alert("Freiparken ist leer.");
+
+return;
+
+}
+
+const player=players.find(p=>p.id===id);
+
+saveHistory();
+
+const win=parking;
+
+player.money+=parking;
+parking=0;
+
+addLog(
+`🎉 ${player.name} kassiert ${win} M aus Freiparken!`,
+"positive"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function bail(id){
+
+const player=players.find(p=>p.id===id);
+
+saveHistory();
+
+player.money-=50;
+
+addLog(
+`🚔 ${player.name} bezahlt 50 M Kaution.`,
+"negative"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function birthday(){
+
+const id=Number(document.getElementById("quickPlayer").value);
+
+if(!id){
+
+alert("Geburtstagskind auswählen.");
+
+return;
+
+}
+
+const birthdayPlayer=players.find(p=>p.id===id);
+
+if(players.length<2){
+
+alert("Mindestens 2 Spieler erforderlich.");
+
+return;
+
+}
+
+saveHistory();
+
+players.forEach(player=>{
+
+if(player.id!==id){
+
+player.money-=10;
+birthdayPlayer.money+=10;
+
+}
+
+});
+
+addLog(
+`🎂 ${birthdayPlayer.name} hat Geburtstag. Jeder zahlt 10 M.`,
+"positive"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function bankPaysEveryone(amount){
+
+if(players.length===0)return;
+
+saveHistory();
+
+players.forEach(player=>{
+player.money+=amount;
+});
+
+addLog(
+`🏦 Die Bank zahlt jedem Spieler ${amount} M.`,
+"positive"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function everyonePaysBank(amount){
+
+if(players.length===0)return;
+
+saveHistory();
+
+players.forEach(player=>{
+player.money-=amount;
+});
+
+addLog(
+`🏦 Jeder Spieler zahlt ${amount} M an die Bank.`,
+"negative"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function randomStartPlayer(){
+
+if(players.length===0){
+
+alert("Zuerst Spieler hinzufügen.");
+
+return;
+
+}
+
+const random=players[Math.floor(Math.random()*players.length)];
+
+startPlayer=random.id;
+
+addLog(
+`🎲 ${random.name} wurde als Startspieler ausgelost.`,
+"neutral"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function removePlayer(id){
+
+const player=players.find(p=>p.id===id);
+
+if(!confirm(`${player.name} wirklich entfernen?`)){
+return;
+}
+
+saveHistory();
+
+players=players.filter(p=>p.id!==id);
+
+if(startPlayer===id){
+startPlayer=null;
+}
+
+addLog(
+`❌ ${player.name} wurde entfernt.`,
+"negative"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function updateSelects(){
+
+const configs=[
+["quickPlayer","Spieler auswählen..."],
+["transferFrom","Von Spieler..."],
+["transferTo","An Spieler..."],
+["rentFrom","Mieter..."],
+["rentTo","Besitzer..."],
+["parkingWinner","Spieler auswählen..."]
+];
+
+configs.forEach(config=>{
+
+const select=document.getElementById(config[0]);
+
+const old=select.value;
+
+select.innerHTML=
+`<option value="">${config[1]}</option>`;
+
+players.forEach(player=>{
+
+const option=document.createElement("option");
+
+option.value=player.id;
+
+option.textContent=
+`${player.name} (${formatMoney(player.money)} M)`;
+
+select.appendChild(option);
+
+});
+
+select.value=old;
+
+});
+
+}
+
+
+
+function addLog(text,type="neutral"){
+
+const time=new Date().toLocaleTimeString(
+"de-DE",
+{
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+logs.unshift({
+text,
+type,
+time
+});
+
+if(logs.length>100){
+logs=logs.slice(0,100);
+}
+
+}
+
+
+
+function renderLog(){
+
+const log=document.getElementById("log");
+
+if(logs.length===0){
+
+log.innerHTML=
+`<div class="logEntry logNeutral">
+Noch keine Transaktionen.
+</div>`;
+
+return;
+
+}
+
+log.innerHTML=logs.map(entry=>{
+
+let cls="logNeutral";
+
+if(entry.type==="positive"){
+cls="logPositive";
+}
+
+if(entry.type==="negative"){
+cls="logNegative";
+}
+
+return`
+<div class="logEntry ${cls}">
+<strong>${entry.time}</strong> –
+${escapeHTML(entry.text)}
+</div>
+`;
+
+}).join("");
+
+}
+
+
+
+function saveHistory(){
+
+history.push({
+
+players:JSON.parse(JSON.stringify(players)),
+parking,
+logs:JSON.parse(JSON.stringify(logs)),
+startPlayer
+
+});
+
+if(history.length>20){
+history.shift();
+}
+
+}
+
+
+
+function undo(){
+
+if(history.length===0){
+
+alert("Nichts zum Rückgängig machen.");
+
+return;
+
+}
+
+const previous=history.pop();
+
+players=previous.players;
+parking=previous.parking;
+logs=previous.logs;
+startPlayer=previous.startPlayer;
+
+addLog(
+"↩ Letzte Aktion wurde rückgängig gemacht.",
+"neutral"
+);
+
+saveGame();
+render();
+
+}
+
+
+
+function saveGame(){
+
+localStorage.setItem(
+"monopolyDigitalBank",
+JSON.stringify({
+players,
+parking,
+logs,
+startPlayer
+})
+);
+
+}
+
+
+
+function loadGame(){
+
+const saved=
+localStorage.getItem("monopolyDigitalBank");
+
+if(saved){
+
+try{
+
+const data=JSON.parse(saved);
+
+players=data.players||[];
+parking=data.parking||0;
+logs=data.logs||[];
+startPlayer=data.startPlayer||null;
+
+}catch(e){
+
+console.log("Spielstand konnte nicht geladen werden.");
+
+}
+
+}
+
+render();
+
+}
+
+
+
+function resetGame(){
+
+if(!confirm(
+"Wirklich ein komplett neues Monopoly-Spiel starten?"
+)){
+return;
+}
+
+players=[];
+parking=0;
+history=[];
+logs=[];
+startPlayer=null;
+
+localStorage.removeItem("monopolyDigitalBank");
+
+addLog(
+"🎲 Neues Monopoly-Spiel gestartet.",
+"neutral"
+);
+
+render();
+
+}
+
+
+
+function formatMoney(number){
+
+return Number(number).toLocaleString("de-DE");
+
+}
+
+
+
+function escapeHTML(text){
+
+return String(text)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+
+
+loadGame();
+
+</script>
+
+</body>
+</html>
